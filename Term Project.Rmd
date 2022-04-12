@@ -1,0 +1,529 @@
+---
+title: "Term"
+author: "201821510_이유빈"
+date: "2018년 12월 9일"
+output: html_document
+---
+
+---
+title: "TERM"
+author: "201821510_이유빈"
+date: "2018년 12월 5일"
+output: html_document
+---
+
+#주제: 국내 드라마 시청률 예측
+
+# 1. 프로젝트 선정 배경과 방법
+- 최근 드라마 시장에는 다양한 주제를 다루고 여러 유명 배우들을 캐스팅한 드라마들이 등장하고 있다. 2011년 말 방송법이 개정됨에 따라 종합편성채널이 개국한 이후 지상파 방송사 중심이었던 중심이었던 드라마 시장이 케이블 및 종합편성채널까지 확대되었으며 스마트폰, 태블릿 등 드라마를 시청할 수 있는 방법이 다양화되었다. 이렇게 방송 시장이 빠르게 변화하고 있음에도 불구하고 시청률은 TV를 기반으로 하는 전통적인 방법으로 측정되어 프로그램 제작사와 광고주들에게 광고비 규모를 산정하는 데 매우 중요한 척도로 활용되고 있다. 특히 드라마는 대중적 인기나 그에 따른 사회적 영향력이라는 차원에서 다른 어떤 장르의 프로그램보다도 중요한 의미를 지니기 때문에 드라마 시청률을 예측하는 것은 제작자와 광고주 입장에서 매우 중요하다. 최근 방송시장의 변화를 고려하여 시청률을 예측하고자 한다.
+- 최근 2018년 10월~11월에 방영한 드라마 34개의 시청률 자료를 수집하고 시청률에 영향을 미칠 것이라고 예상되는 드라마  내외부적 요인들을 고려하여 변수 생성을 할 것이다. 우선, 드라마의 초기 시청률에 대한 예측 모형을 제시한 뒤 최종적으로 드라마의 평균 시청률을 예측하는 할 것이다. 초기와 최종 시청률을 예측하는 이유는 다음과 같다. 드라마 방영 이전에는 연출자와 주연배우와 같이 시청자들이 드라마 방영 전에 알 수 있는 기본 정보들만을 고려한 모형이 적합하다. 그리고 드라마가 방영되기 시작한 이후에는 해당 드라마에 대한 여론이 전체 시청률에 많은 영향을 미칠 것이라고 생각되기 때문에 드라마의 기본 정보들과 여론을 모두 고려한 모형이 적합하다. 또한, 시청률 예측에 중요하게 작용하는 변수들이 어떻게 달라지는지도 살펴보고자 한다.
+
+# 2. 데이터 수집 과정
+- 수집하고자 하는 데이터는 2018년 10월~11월에 방영한 34개의  드라마이다. 드라마의 시청률은 ‘네이버(www.naver.com)’와 TNmS(WWW.tnms.tv) 사이트에서 제공하는 시청률 자료를 사용하였다. 시청률에 영향을 미치는 여러 가지 요인으로는 연출자/작가, 방송사, 편성시간, 날씨와 경제지표를 고려하였다. 드라마의 기본 정보는 다음(https://www.daum.net/), 네이버(www.naver.com)와 같은 포털 사이트로부터 얻었다. 날씨와 경제지표는 각각 기상자료개발포털(https://data.kma.go.kr)과 위키백과(https://ko.wikipedia.org/wiki/) 웹사이트에서 수집하였다.
+
+# 3. 데이터 분석 및 전처리
+```{r}
+#install.packages(c('httr','rvest'))
+library(httr)
+library(rvest)
+
+channel = NULL
+program = NULL
+viewer_rating = NULL
+
+for(i in 1:31){
+  url <- c("https://search.naver.com/search.naver?where=nexearch&sm=tab_etc&query=10월%20")
+  urls <- paste0(url, i, "일", "드라마시청률")
+  html_source = read_html(urls)
+  
+  #channel
+  channel0 = html_nodes(html_source, 'td.ct>p>a')
+  channel1 = html_text(channel0)
+  channel = append(channel, channel1)
+
+  #program
+  program0 = html_nodes(html_source, 'tr>td>p>a')
+  program1 = html_text(program0)
+  program = append(program, program1)
+  
+  #viewer_rating
+  viewer_rating0 = html_nodes(html_source, 'td.ct.scroll_p')
+  viewer_rating1 = html_text(viewer_rating0)
+  viewer_rating = append(viewer_rating, viewer_rating1)
+}
+
+program <- data.frame(program)
+i <- seq(1,998,2)
+program <- program[i,]
+b <- data.frame(program)
+
+drama = data.frame(channel, viewer_rating)
+drama2 <- cbind(b,drama)
+write.csv(drama2,"drama10월.csv")
+```
+
+```{r}
+channel1 = NULL
+program1 = NULL
+viewer_rating1 = NULL
+
+for(a in 1:30){
+  url1 <- c("https://search.naver.com/search.naver?where=nexearch&sm=tab_etc&query=11월%20")
+  urls1 <- paste0(url1, a, "일", "드라마시청률")
+  html_source1 = read_html(urls1)
+  
+  #channel
+  channel01 = html_nodes(html_source1, 'td.ct>p>a')
+  channel11 = html_text(channel01)
+  channel1 = append(channel1, channel11)
+
+  #program
+  program01 = html_nodes(html_source1, 'td>p>a')
+  program11 = html_text(program01)
+  program1 = append(program1, program11)
+  
+  #viewer_rating
+  viewer_rating01 = html_nodes(html_source1, 'td.ct.scroll_p')
+  viewer_rating11 = html_text(viewer_rating01)
+  viewer_rating1 = append(viewer_rating1, viewer_rating11)
+}
+
+program1 <- data.frame(program1)
+a <- seq(1,1016,2)
+program1 <- program1[a,]
+b <- data.frame(program1)
+drama1 = data.frame(channel1, viewer_rating1)
+drama3 <- cbind(b,drama1)
+write.csv(drama3,"drama11월.csv")
+```
+
+```{r}
+# 드라마 10월과 11월 데이터파일 합치기
+drama_10 <- read.csv("drama10월.csv", header=T, stringsAsFactor=F)
+drama_11 <- read.csv("drama11월.csv", header=T, stringsAsFactor=F)
+names(drama_11)[2] <- c("program")
+names(drama_11)[3] <- c("channel")
+names(drama_11)[4] <- c("viewer_rating")
+drama <- rbind(drama_10, drama_11)
+drama <- drama[,-1]
+```
+
+```{r}
+# 여러번 나오는 드라마 프로그램 계수 줄이기
+table(drama[1])
+
+drama[drama$program=="강남스캔들",]
+a <- drama[c(928),]
+drama[drama$program=="끝까지 사랑",]
+b <- drama[c(835),]
+drama[drama$program=="내 뒤에 테리우스 2부",]
+c <- drama[c(739),]
+drama[drama$program=="내 사랑 치유기 2부",]
+d <- drama[c(786),]
+drama[drama$program=="내일도 맑음",]
+e <- drama[c(500),]
+drama[drama$program=="단짠 오피스",]
+f <- drama[c(694),]
+g <- drama[drama$program=="드라마 스페셜 - 나의 흑역사 오답노트",]
+h <- drama[drama$program=="드라마 스페셜 - 너무 한낮의 연애",]
+i <- drama[drama$program=="드라마 스페셜 - 너와 나의 유효기간",]
+j <- drama[drama$program=="드라마 스페셜 - 닿을 듯 말 듯",]
+k <- drama[drama$program=="드라마 스페셜 - 도피자들",]
+l <- drama[drama$program=="드라마 스페셜 - 미스김의 미스터리",]
+m <- drama[drama$program=="드라마 스페셜 - 엄마의 세 번째 결혼",]
+n <- drama[drama$program=="드라마 스페셜 - 이토록 오랜 이별",]
+o <- drama[drama$program=="드라마 스페셜 - 도피자들",]
+p <- drama[drama$program=="드라마 스페셜 - 잊혀진 계절",]
+drama[drama$program=="러블리 호러블리 2부",]
+q <- drama[c(23),]
+drama[drama$program=="맨도롱 또똣",]
+r <- drama[c(642),]
+drama[drama$program=="미스 마:복수의 여신 4부",]
+s <- drama[c(87),]
+drama[drama$program=="배드파파 2부",]
+t <- drama[c(21),]
+drama[drama$program=="부잣집 아들 4부",]
+u <- drama[c(104),]
+drama[drama$program=="붉은 달 푸른 해 1부",]
+v <- drama[c(842),]
+drama[drama$program=="비밀과 거짓말",]
+w <- drama[c(855),]
+x <- drama[drama$program=="사의찬미 2부",]
+drama[drama$program=="숨바꼭질 4부",]
+y <- drama[c(766),]
+z <- drama[drama$program=="신과의 약속 4부",]
+drama[drama$program=="여우각시별 2부",]
+a1 <- drama[c(822),]
+drama[drama$program=="오늘의 탐정 1부",]
+b1 <- drama[c(45),]
+drama[drama$program=="죽어도 좋아 2부",]
+c1 <- drama[c(602),]
+drama[drama$program=="차달래 부인의 사랑",]
+d1 <- drama[c(877),]
+drama[drama$program=="최고의 이혼 2부",]
+e1 <- drama[c(826),]
+drama[drama$program=="하나뿐인 내편 2부",]
+f1 <- drama[c(902),]
+drama[drama$program=="황후의 품격 2부",]
+g1 <- drama[c(982),]
+drama[drama$program=="흉부외과:심장을 훔친 의사들 2부",]
+h1 <- drama[c(34),]
+
+drama_best <- rbind(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,a1,b1,c1,d1,e1,f1,g1,h1)
+rownames(drama_best) <- NULL
+write.csv(drama_best,"drama_best.csv")
+```
+
+```{r}
+#install.packages("plotly")
+library(plotly)
+library(ggplot2)
+drama <- ggplot(drama_best, aes(program, channel, colour=viewer_rating)) + geom_point() + theme(axis.text.x=element_text(angle=90, hjust=1))
+ggplotly(drama)
+```
+
+#연출자/작가
+- 다양하고 창의적인 드라마가 열풍인 만큼 드라마의 내용과 완성도가 시청률에 영향을 미칠 것이고, 유명 연출자나 작가의 드라마일수록 시청자들이 큰 관심을 가질 것이다. 이에 연출자와 작가 변수를 고려하였다.
+```{r}
+#시청률이 9% 이상이어야 높다고 판단하였다. 시청률이 9% 이상인 드라마의 연출자와 작가의 데이터를 분석하여 시청률에 영향을 미치는지 알아볼 것이다.
+
+author <- read.csv("author.csv", header=T, stringsAsFactors = F)
+
+#install.packages("KoNLP")
+#install.packages("wordcloud")
+#install.packages("RColorBrewer")
+library(KoNLP)
+library(wordcloud)
+library(RColorBrewer)
+
+undata <- unlist(author) 
+undata <- Filter(function(x){nchar(x)<=3},undata)
+wdata <- data.frame(undata) 
+wc <- table(wdata)
+
+wordcloud(names(wc), freq=wc, scale=c(5,0.5),min.freq=10, max.words=30, random.order=F, random.color = T, color=brewer.pal(10,"Paired"))
+```
+- 분석결과: 연출자와 작가의 wordcloud를 살펴보면, 김승모 기획자의 이름이 가장 크게 나타것을 알 수 있다. 따라서, 김승모 기획자가 기획한 드라마라면 시청률이 높을 것이라고 예측할 수 있다.
+
+
+#편성시간
+- 방송사마다 드라마가 편성되는 방송시간대는 다양하다. 일반적으로 방송시간이 시청률에 많은 영향을 미치므로 이 변수를 분석에 포함하였다. 편성시간대 변수로 방송요일과 방송시작 시간을 기록하였다.
+```{r}
+time = NULL
+
+for(i in c("여우각시별", "황후의품격", "내뒤에테리우스", "내사랑치유기", "부잣집아들","비밀과거짓말","숨바꼭질","신과의약속","끝까지사랑","하나뿐인내편","내일도맑음")){
+  url <- c("https://search.daum.net/search?w=tot&DA=YZR&t__nil_searchbox=btn&sug=&sugo=&q=")
+  urls <- paste0(url,i)
+  html_source = read_html(urls)
+  
+  time0 = html_nodes(html_source, 'div.summary_info>span.txt_summary')
+  time1 = html_text(time0)
+  time = append(time, time1)
+}
+write.csv(time,"time.csv")
+time <- read.csv("time.csv", header=T, stringsAsFactor=F)
+time <- time[c(2,5,8,11,14,17,20,23,26,29,32),]
+rownames(time) <- NULL
+program <- c("여우각시별", "황후의품격", "내뒤에테리우스", "내사랑치유기", "부잣집아들","비밀과거짓말","숨바꼭질","신과의약속","끝까지사랑","하나뿐인내편","내일도맑음")
+time0 <- cbind(program, time)
+
+#시간이 제공되지 않은 것은 방송종료된 프로그램이다.
+#실제 방송되고 있는 데이터만 사용하기 위해서 방송종료된 드라마를 제거함.
+time0 <- time0[-c(1,3,5,7,11),]
+names(time0)[3] <- c("time")
+names(time0)
+time0 <- time0[,-2]
+time0[1,2] = gsub("&nbsp"," ", time0[1,2])
+time0[2,2] = gsub("&nbsp"," ", time0[2,2])
+time0[3,2] = gsub("&nbsp"," ", time0[3,2])
+time0[4,2] = gsub("&nbsp"," ", time0[4,2])
+time0[5,2] = gsub("&nbsp"," ", time0[5,2])
+time0[6,2] = gsub("&nbsp"," ", time0[6,2])
+
+viewer <- c("9.3%","10.8%","11.5%","12.0%","15.3%","34.8%")
+time0 <- cbind(time0,viewer)
+a <- ggplot(time0, aes(x=viewer, y=time, colour=program))+geom_point()
+ggplotly(a)
+```
+- 분석결과: 편성시간과 시청률의 관계를 살펴보면, 저녁시간 때인 7:00~8:00에 방영시간인 드라마가 시청률이 높다는 것을 알 수 있습니다. 또한, 주로 주말에 방영되는 드라마가 시청률이 높다는 것을 알 수 있다.
+- 시청률이 가장 높은 "하나뿐인 내편"은 토요일과 일요일 저녁 7시55분에 방영한다. 또한, 두 번째로 시청률이 높은 "끝까지 사랑"도 저녁 7시50분에 방영이 된다. 이것으로 알 수 있는 것은 저녁시간 때 방영하는 드라마가 시청률이 높을 것이라는 예측을 할 수 있다.
+
+
+#방송사
+- 각 방송사들은 그들만의 이미지를 구축함으로써 시청자들의 프로그램 선택에 영향을 미친다. 이는 채널 시청 행위를 예측하는 데 중요하게 작용하는 변인이다. 이에 따라 방송사명을 변수로 사용하였다.
+```{r}
+for(i in 1:34){
+drama_best[i,3] = gsub("%","", drama_best[i,3])
+}
+drama_best$viewer_rating <- as.numeric(drama_best$viewer_rating)
+a <- drama_best[drama_best$viewer_rating>=10,]
+ggplot(a, aes(x=channel))+geom_bar(aes(fill=channel), colour="black") + scale_fill_brewer(palette="Reds")+ labs(title="인기 드라마에 따른 방송사 수", x="방송사", y="계수")
+```
+- 분석결과: 아래의 막대그래프와 같이 KBS1에서는 시청률이 10% 넘는 것이 1개, KBS2에서는 2개, MBC에서는 6개가 있다는 것을 알 수 있다. 따라서, 방송사가 MBC라면 드라마의 시청률이 높다는 것을 예측할 수 있다.
+
+
+#날씨
+- 날씨에 따라 사람들의 행동 패턴이 많이 좌우된다. 맑고 화창한 날씨라면 외출을 많이 하는 경향이 있는 반면 흐리거나 비가 내리는 등 날씨가 좋지 않을 때는 되도록 외출을 삼가는 경우가 많다. 외출을 하지 않는다면 가정에서 다른 일을 할 수도 있지만 TV 드라마를 볼 가능성이 있고 이런 이유로 시청률 예측에 영향을 미치는 요인으로 날씨를 고려하였다. 날씨에 대한 정보로는 평균기온, 강수량, 습도를 사용하였다. 드라마의 시청률이 가장 높았을 때를 기준으로 하겠다.
+```{r}
+#TNmS("WWW.tnms.tv/") 사이트에서 최종적으로 남았던 11개 드라마의 시청률을 모두 수집하려고 하였지면, "비밀과 거짓말"과 "숨바꼭질" 드라마의 시청률 데이터가 존재하지 않았다. 나머지 9개 드라마의 데이터는 모두 수집되었다.
+
+#여우각시별 2018년11월20일에 최고 시청률(9.7%)
+b <- read.csv("여우각시별.csv")
+b <- data.frame(b)
+b$TNmS <- as.character(b$TNmS)
+for(i in 1:32){
+  b[i,2] = gsub("%","", b[i,2])
+}
+b$TNmS <- as.numeric(b$TNmS)
+b <- b[b$TNmS==max(b$TNmS),]
+
+#황후의 품격 2018년12월5일에 최고 시청률(9.2%)
+c <- read.csv("황후의 품격.csv")
+c <- data.frame(c)
+c$TNmS <- as.character(c$TNmS)
+for(i in 1:10){
+  c[i,2] = gsub("%","", c[i,2])
+}
+c$TNmS <- as.numeric(c$TNmS)
+c <- c[c$TNmS==max(c$TNmS),]
+
+#내 뒤에 테리우스 2018년11월1일에 최고 시청률(10.8%)
+d <- read.csv("내 뒤에 테리우스.csv")
+d <- data.frame(d)
+d$TNmS <- as.character(d$TNmS)
+for(i in 1:32){
+  d[i,2] = gsub("%","", d[i,2])
+}
+d$TNmS <- as.numeric(d$TNmS)
+d[is.na(d)] <- 0
+d <- d[d$TNmS==max(d$TNmS),]
+
+#내 사랑 치유기 2018년11월18일에 최고 시청률(11.3%)
+e <- read.csv("내사랑 치유기.csv")
+e <- data.frame(e)
+e$TNmS <- as.character(e$TNmS)
+for(i in 1:24){
+  e[i,2] = gsub("%","", e[i,2])
+}
+e$TNmS <- as.numeric(e$TNmS)
+e[is.na(e)] <- 0
+e <- e[e$TNmS==max(e$TNmS),]
+
+#부잣집 아들 2018년3월25일에 최고 시청률(12.6%)
+f <- read.csv("부잣집 아들.csv")
+f <- data.frame(f)
+f$TNmS <- as.character(f$TNmS)
+for(i in 1:80){
+  f[i,2] = gsub("%","", f[i,2])
+}
+f$TNmS <- as.numeric(f$TNmS)
+f[is.na(f)] <- 0
+f <- f[f$TNmS==max(f$TNmS),]
+
+#신과의 약속 2018년11월24일에 최고 시청률(11.5%)
+g <- read.csv("신과의 약속.csv")
+g <- data.frame(g)
+g$TNmS <- as.character(g$TNmS)
+for(i in 1:8){
+  g[i,2] = gsub("%","", g[i,2])
+}
+g$TNmS <- as.numeric(g$TNmS)
+g[is.na(g)] <- 0
+g <- g[g$TNmS==max(g$TNmS),]
+
+#끝까지 사랑 2018년11월28일에 최고 시청률(20.9%)
+h <- read.csv("끝까지 사랑.csv")
+h <- data.frame(h)
+h$TNmS <- as.character(h$TNmS)
+for(i in 1:86){
+  h[i,2] = gsub("%","", h[i,2])
+}
+h$TNmS <- as.numeric(h$TNmS)
+h[is.na(h)] <- 0
+h <- h[h$TNmS==max(h$TNmS),]
+
+#하나뿐인 내편 2018년12월2일에 최고 시청률(37.5%)
+j <- read.csv("하나뿐인 내편.csv")
+j <- data.frame(j)
+j$TNmS <- as.character(j$TNmS)
+for(i in 1:48){
+  j[i,2] = gsub("%","", j[i,2])
+}
+j$TNmS <- as.numeric(j$TNmS)
+j[is.na(j)] <- 0
+j <- j[j$TNmS==max(j$TNmS),]
+
+#내일도 맑음 2018년10월25일에 최고 시청률(25.9%)
+k <- read.csv("내일도 맑음.csv")
+k <- data.frame(k)
+k$TNmS <- as.character(k$TNmS)
+for(i in 1:121){
+  k[i,2] = gsub("%","", k[i,2])
+}
+k$TNmS <- as.numeric(k$TNmS)
+k[is.na(k)] <- 0
+k <- k[k$TNmS==max(k$TNmS),]
+
+library(ggplot2)
+best_view <- rbind(b,c,d,e,f,g,h,j,k)
+best_view <- data.frame(best_view)
+names(best_view)[1] <- "date"
+ggplot(best_view,aes(x=date,TNmS,fill=date)) + geom_bar(stat="identity",width=1) + scale_fill_brewer(palette="Purples")+ labs(title="날짜 별 시청률", x="날짜", y="시청률") + geom_text(stat="identity", aes(label=(TNmS)),vjust=1.2,fontface="bold")
+
+#시청률 높았던 날짜를 알 수 있다.
+#이 날짜의 날씨를 살펴보면, 날씨와 시청률의 관계를 알 수 있을 것이다.
+```
+
+```{r}
+#기상자료개발포털("https://data.kma.go.kr")에서 수원지역의 평균기온, 일강수량, 평균 상대습도 자료를 수집하였다.
+#부잣집 아들 드라마는 다른 드라마와 다르게 3월에 최고 시청률이 기록되었기 때문에 분석에서 제거하겠다.
+#10월25일부터 12월5일까지의 기상관측 자료를 사용하겠다.
+
+weather <- read.csv("20181207171642.csv")
+weather <- data.frame(weather)
+a <- weather[weather$일시=="2018-10-25",]
+b <- weather[weather$일시=="2018-11-18",]
+c <- weather[weather$일시=="2018-11-20",]
+d <- weather[weather$일시=="2018-11-24",]
+e <- weather[weather$일시=="2018-11-28",]
+f <- weather[weather$일시=="2018-12-02",]
+g <- weather[weather$일시=="2018-12-05",]
+
+weather_best <- rbind(a,b,c,d,e,f,g)
+weather_best <- data.frame(weather_best)
+weather_best[is.na(weather_best)] <- 0
+weather_best <- weather_best[,-1]
+
+#install.packages("DT")
+library(DT)
+#6일중 5일의 강수량이 존재하지 않으므로 강수량 열을 삭제하겠다.
+weather_best <- weather_best[,-3]
+rownames(weather_best) <- NULL
+names(weather_best) <- c("날짜","평균기온","평균습도")
+datatable(weather_best, class='cell-border stripe')
+
+#12월의 평균기온과 평균습도는 존재하지 않는다. 그러므로 10월과 11월의 데이터만 사용하겠다.
+#install.packages("DT")
+library(DT)
+weather_average <- read.csv("20181207234317.csv")
+weather_average <- data.frame(weather_average)
+weather_average <- weather_average[,-1]
+names(weather_average) <- c("월","평균기온","평균습도")
+datatable(weather_average, class='cell-border stripe')
+```
+- 분석결과: 시청률이 높았던 시기의 날씨 분석을 하였지만, 위의 표를 보면 알 수 있듯이 월 평균기온과 평균습도를 비교해보면 큰 차이가 없다. 따라서, 시청률과 날씨는 큰 관련은 없다고 할 수 있다.
+
+#주연배우
+- 드라마에 있어서 연출자와 작가도 시청률에 영향을 미치지만, 가장 영향력이 클 것이라 생각되는 변수는 단연 배우이다. 주연배우가 유명한 배우일수록 드라마가 흥행할 가능성이 높다. 이때 주연배우는 포털 사이트 네이버에 해당 드라마의 주연으로 명시되어 있는 배우를 의미한다. 주연배우는 드라마를 대표하는 배우로써 큰 비중을 차지하고 있으므로 주연 배우를 일종의 등급과 같은 수치화하는 데 있어 2가지의 기준을 두었다. 첫 번째는 해당 드라마 이전에 출연한 방송(드라마 및 예능과 같은 TV 브라운관에서의 방송활동)과 영화의 수이다. 두 번재 기준은 수상 경력으로, 각종 시상식을 비롯하여 각 방송사에서 매년 주최하는 연말 시상식에서 수상한 상의 개수이다.
+```{r}
+#배우의 방송정보와 수상내역은 위키백과(https://ko.wikipedia.org/wiki/)에서 수집하였다.
+#시청률이 9%이상이어야 높다고 판단하였다. 따라서, 시청률이 9%이상이 드라마 "비밀과 거짓말, 여우각시별, 황후의 품격, 숨바꼭질, 내 뒤에 테리우스, 내 사랑 치유기, 부잣집 아들, 신과의 약속, 끝까지 사랑, 하나뿐인 내편, 내일도 맑음" 11개를 분석하겠다.
+
+actor <- read.csv("actor.csv", header = T, stringsAsFactors = F)
+actor <- data.frame(actor)
+datatable(actor)
+
+broadcasting <- read.csv("actor_broadcasting.csv", header = T, stringsAsFactors = F)
+braodcasting <- data.frame(broadcasting)
+broadcasting[braodcasting==""] <- NA
+
+a <- nrow(broadcasting[broadcasting$actor=="이제훈",][2])
+b <- nrow(broadcasting[broadcasting$actor=="채수빈",][2])
+c <- nrow(broadcasting[broadcasting$actor=="이동건",][2])
+d <- nrow(broadcasting[broadcasting$actor=="오승아",][2])
+e <- nrow(broadcasting[broadcasting$actor=="장나라",][2])
+f <- nrow(broadcasting[broadcasting$actor=="최진혁",][2])
+g <- nrow(broadcasting[broadcasting$actor=="신성록",][2])
+h <- nrow(broadcasting[broadcasting$actor=="신은경",][2])
+i <- nrow(broadcasting[broadcasting$actor=="이엘리야",][2])
+j <- nrow(broadcasting[broadcasting$actor=="이유리",][2])
+k <- nrow(broadcasting[broadcasting$actor=="엄현경",][2])
+l <- nrow(broadcasting[broadcasting$actor=="조예린",][2])
+m <- nrow(broadcasting[broadcasting$actor=="소지섭",][2])
+n <- nrow(broadcasting[broadcasting$actor=="정인선",][2])
+o <- nrow(broadcasting[broadcasting$actor=="손호준",][2])
+p <- nrow(broadcasting[broadcasting$actor=="임세미",][2])
+q <- nrow(broadcasting[broadcasting$actor=="소유진",][2])
+r <- nrow(broadcasting[broadcasting$actor=="연정훈",][2])
+s <- nrow(broadcasting[broadcasting$actor=="윤종훈",][2])
+t <- nrow(broadcasting[broadcasting$actor=="김지훈",][2])
+u <- nrow(broadcasting[broadcasting$actor=="이규한",][2])
+v <- nrow(broadcasting[broadcasting$actor=="홍수현",][2])
+w <- nrow(broadcasting[broadcasting$actor=="한채영",][2])
+x <- nrow(broadcasting[broadcasting$actor=="오윤아",][2])
+y <- nrow(broadcasting[broadcasting$actor=="이천희",][2])
+z <- nrow(broadcasting[broadcasting$actor=="이영아",][2])
+a1 <- nrow(broadcasting[broadcasting$actor=="홍수아",][2])
+b1 <- nrow(broadcasting[broadcasting$actor=="강은탁",][2])
+c1 <- nrow(broadcasting[broadcasting$actor=="심지호",][2])
+d1 <- nrow(broadcasting[broadcasting$actor=="최수종",][2])
+e1 <- nrow(broadcasting[broadcasting$actor=="유이",][2])
+f1 <- nrow(broadcasting[broadcasting$actor=="이장우",][2])
+g1 <- nrow(broadcasting[broadcasting$actor=="나혜미",][2])
+h1 <- nrow(broadcasting[broadcasting$actor=="윤진이",][2])
+i1 <- nrow(broadcasting[broadcasting$actor=="박성훈",][2])
+j1 <- nrow(broadcasting[broadcasting$actor=="정은우",][2])
+  
+broadcast <- rbind(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,a1,b1,c1,d1,f1,g1,h1,i1,j1) 
+broadcast <- data.frame(broadcast)
+
+library(dplyr)
+broadcast <- add_rownames(broadcast,"value")
+names(broadcast) <- c("value","broadcasting")
+
+#install.packages("plotly")
+library(plotly)
+library(ggplot2)
+library(scales)
+dr <- ggplot(broadcast,aes(value, broadcasting,fill=value))+geom_bar(stat="identity")+labs(title="배우별 영화 및 방송 개수", x="배우", y="개수")+geom_text(stat="identity", aes(label=(broadcasting)),vjust=0.1,fontface="bold")
+ggplotly(dr)
+
+broadcasting1 <- na.omit(broadcasting)
+
+e <- nrow(broadcasting1[broadcasting1$actor=="장나라",][3])
+f <- nrow(broadcasting1[broadcasting1$actor=="최진혁",][3])
+g <- nrow(broadcasting1[broadcasting1$actor=="신성록",][3])
+h <- nrow(broadcasting1[broadcasting1$actor=="신은경",][3])
+i <- nrow(broadcasting1[broadcasting1$actor=="이엘리야",][3])
+j <- nrow(broadcasting1[broadcasting1$actor=="이유리",][3])
+k <- nrow(broadcasting1[broadcasting1$actor=="엄현경",][3])
+m <- nrow(broadcasting1[broadcasting1$actor=="소지섭",][3])
+n <- nrow(broadcasting1[broadcasting1$actor=="정인선",][3])
+o <- nrow(broadcasting1[broadcasting1$actor=="손호준",][3])
+p <- nrow(broadcasting1[broadcasting1$actor=="임세미",][3])
+q <- nrow(broadcasting1[broadcasting1$actor=="소유진",][3])
+r <- nrow(broadcasting1[broadcasting1$actor=="연정훈",][3])
+t <- nrow(broadcasting1[broadcasting1$actor=="김지훈",][3])
+u <- nrow(broadcasting1[broadcasting1$actor=="이규한",][3])
+v <- nrow(broadcasting1[broadcasting1$actor=="홍수현",][3])
+w <- nrow(broadcasting1[broadcasting1$actor=="한채영",][3])
+x <- nrow(broadcasting1[broadcasting1$actor=="오윤아",][3])
+y <- nrow(broadcasting1[broadcasting1$actor=="이천희",][3])
+z <- nrow(broadcasting1[broadcasting1$actor=="이영아",][3])
+a1 <- nrow(broadcasting1[broadcasting1$actor=="홍수아",][3])
+b1 <- nrow(broadcasting1[broadcasting1$actor=="강은탁",][3])
+c1 <- nrow(broadcasting1[broadcasting1$actor=="심지호",][3])
+d1 <- nrow(broadcasting1[broadcasting1$actor=="최수종",][3])
+f1 <- nrow(broadcasting1[broadcasting1$actor=="이장우",][3])
+h1 <- nrow(broadcasting1[broadcasting1$actor=="윤진이",][3])
+i1 <- nrow(broadcasting1[broadcasting1$actor=="박성훈",][3])
+j1 <- nrow(broadcasting1[broadcasting1$actor=="정은우",][3])
+
+broadcast1 <- rbind(e,f,g,h,i,j,k,m,n,o,p,q,r,t,u,v,w,x,y,z,a1,b1,c1,d1,f1,h1,i1,j1) 
+broadcast1 <- data.frame(broadcast1)
+
+broadcast1 <- add_rownames(broadcast1,"value")
+names(broadcast1) <- c("value","prize")
+
+dr1 <- ggplot(broadcast1,aes(value, prize, fill=value))+geom_bar(stat="identity")+labs(title="배우별 수상 개수", x="배우", y="개수")+geom_text(stat="identity", aes(label=(prize)),vjust=0.1,fontface="bold")
+ggplotly(dr1)
+```
+- 분석결과: 영화 및 방송의 개수가 50개 이상인 배우들은 이제훈, 최수종, 신은경, 이유리, 소지섭, 소유진, 홍수현 이다. 따라서, 이 배우들이 주연으로 나오는 영화나 드라마는 시청률이 높을 것이라고 예상할 수 있다. 영화 및 방송에 많이 출연을 했다는 것은 사람들의 인식이 좋고 출연 후 결과도 좋았다는 것을 의미한다고 생각하기 때문이다.
+- 상을 수상한 개수가 많다는 것은 배우로써 유명하고 능력이 있다는 것을 의미한다. 따라서, 수상한 개수가 많은 배우가 출연한 작품은 시청률이 높을 것이라고 예측할 수 있다. 수상한 개수가 20개 이상인 배우들에는 소지섭, 최수종, 장나라, 이유리가 있다.
+
+#결론
+- 본 연구에서는 드라마와 직접적 관련이 있는 변수와 날씨 등 드라마 시청률에 간접적인 영향을 미칠 것으로 보이는 외부적 변수를 포함한 다양한 설명변수를 생성하여 국내 드라마 시청률을 예측하고 시청률에 유의한 영향을 미치는 변수들을 도출하였다. 
+- 분석결과는 다음과 같다. 우선 드라마의 초반 시청률을 예측한 첫 번째 모형에서 가장 중요한 요인들로 도출된 설명변수는 방송사, 평균 시청률, 방송시간 변수 였다. 따라서 시청자들은 해당 방송 시간대의 이전 작품의 영향을 받는 경향이 있으며 어느 방송사에서 방송하는 드라마인지 또한 시청률에 크게 영향을 미친다는 사실을 알 수 있었다. 분석 결과 MBC에서 방영하는 드라마의 시청률이 타 방송사의 드라마 시청률에 비해 유의하게 높았다. 하지만 날씨 변수는 영향을 미치지 않는 것으로 나타났다. 드라마 방영시간에서는 주말과 저녁시간에 방영하는 것이 시청률이 높을 것이라고 예측할 수 있다. 주연배우 변수에서는 이제훈, 최수종, 신은경, 이유리, 소지섭, 소유진, 홍수현, 장나라가 출연하는 작품은 시청률이 높을 것이라고 예측할 수 있다. 또한, 연출자와 작가 변수 중에서 김승모 기획자가 기획한 작품이라면 시청률이 높을 것이라고 예측할 수 있다.
+- 드라마 시청률 예측을 위해 추가적인 설명변수를 고려할 때 드라마 제작비와 같은 금전적 요인이 적지 않은 영향을 미칠 것이라 생각되었지만 국내 제작사들의 보안으로 정보를 수집하는 데 제약이 있었다. 하지만 제작비와 유명 작가의 원고료나 유명 배우의 출연료 등과 높은 상관관계를 보일 것이므로 본 연구에서는 연구에서 사용한 설명변수들로 충분히 보완이 가능한 부분인 것으로 생각한다.
+- 드라마의 대중적 인기나 그에 따른 사회적 영향력은 제작자와 광고주 입장에서는 매우 중요하다. 따라서, 작품이 방영되기 전에 시청률을 예측한다면 광고주는 대중적으로 인기있는 배우를 광고에 출연시킬 수 있다.
+
